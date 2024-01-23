@@ -1,0 +1,77 @@
+#kickchat
+$kickapp = 'wss://ws-us2.pusher.com/app/eb1d5f283081a78b932c?protocol=7&client=js&version=7.6.0&flash=false'
+$JoinRQstreamChattingBehavior = $false
+ ⚠ ''  =ID2
+$JoinRqStreamWatchingBehavior = $false
+ ⚠ ''  =ID1
+#$msg = '{"event":"pusher:subscribe","data":{"auth":"","channel":"chatrooms.3463203.v2"}}'
+
+ $WS = New-Object System.Net.WebSockets.ClientWebSocket                                                
+        $CT = New-Object System.Threading.CancellationToken
+        $WS.Options.UseDefaultCredentials = $true
+        $Conn = $WS.ConnectAsync($KickApp, $CT)
+        While (!$Conn.IsCompleted) 
+            { 
+            Start-Sleep -Milliseconds 100 
+            }
+
+        Write-Host "Connected to $($URL)"
+        $Size = 1024
+        $Array = [byte[]] @(,0) * $Size
+
+        #Lecture en boucle
+        While ($WS.State -eq 'Open') 
+            {
+            $Size = 1024
+            $Array = [byte[]] @(,0) * $Size
+
+            $Recv = New-Object System.ArraySegment[byte] -ArgumentList @(,$Array)
+            $Conn = $WS.ReceiveAsync($Recv, $CT)
+            While (!$Conn.IsCompleted) 
+                {
+                    Start-Sleep -Milliseconds 100
+                }
+            $message = [System.Text.Encoding]::utf8.GetString($Recv.array)
+            $message = ($message.split([char]10) -join '').TrimEnd([char]0)
+            
+
+
+##DEBUG SHOW ALL            "$(get-date) : $message"
+##AC7 test
+
+        if(!$JoinRqStreamWatchingBehavior)
+                {
+                $suscribemsg1 = '{"event":"pusher:subscribe","data":{"auth":"","channel":"channel.⚠'ID1:exmp|'1209488';:'
+                                                            "}
+                            }'
+                $Command = [System.Text.Encoding]::UTF8.GetBytes($suscribemsg1)
+                $Send = New-Object System.ArraySegment[byte] -ArgumentList @(,$Command)            
+                $Conn = $WS.SendAsync($Send, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, $CT)
+                $JoinRqStreamISWatchingBehavior = $True
+                }
+
+
+
+        if(!$JoinRQstreamChattingBehavior)
+                {
+                $suscribemsg2 = '{"event":"pusher:subscribe","data":{"auth":"","channel":"chatrooms.⚠'ID2:exmp|'1202499.v2';:'
+                                                                "}
+                            }'
+                $Command = [System.Text.Encoding]::UTF8.GetBytes($suscribemsg2)
+                $Send = New-Object System.ArraySegment[byte] -ArgumentList @(,$Command)            
+                $Conn = $WS.SendAsync($Send, [System.Net.WebSockets.WebSocketMessageType]::Text, $true, $CT)
+                $JoinRQstreamChattingBehavior = $True
+                }
+
+            if($message -match "ChatMessageEvent")
+                {
+                $json = $message | ConvertFrom-Json
+                $msgdata = ($json.data | ConvertFrom-Json)
+                $chatroomid = $msgdata.Chatroom_id
+                $sender = $msgdata.Sender.username
+                $message = $msgdata.Content
+                write-host "$(get-date) => $sender @ $chatroomid : " -NoNewline -ForegroundColor yellow ; write-host $message -ForegroundColor DarkGreen
+                }
+
+            ##Other kind of message to parse
+            }
