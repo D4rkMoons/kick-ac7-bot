@@ -62,7 +62,6 @@ ws.on("message", (data: WebSocket.Data) => {
     joinRqStreamChattingBehavior = true;
   }
 
-  // // Happy path
   if (message.includes("ChatMessageEvent")) {
     const wsJson = JSON.parse(message);
     const msgData = JSON.parse(wsJson.data);
